@@ -34,7 +34,7 @@ export default function PickupDetailPage() {
       setPickup(response.data)
       
       // Fetch available couriers for admin
-      if (user.role === 'ADMIN') {
+      if (user && user.role === 'ADMIN') {
         const couriersResponse = await axios.get('/api/users?role=COURIER', {
           headers: { Authorization: `Bearer ${token}` }
         })
