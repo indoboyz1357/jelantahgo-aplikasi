@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 export async function GET(request: NextRequest) {
   try {
