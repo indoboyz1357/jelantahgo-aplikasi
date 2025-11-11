@@ -1,0 +1,33 @@
+name: Prisma Migrate (Neon)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies (production only)
+        run: npm ci --omit=dev
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Prisma Migrate Deploy (Neon)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Trigger Vercel Deploy Hook (optional)
+        if: ${{ secrets.VERCEL_DEPLOY_HOOK_URL != '' }}
+        run: |
+          curl -X POST -d '{}' "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" || true

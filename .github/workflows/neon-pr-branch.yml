@@ -1,0 +1,218 @@
+name: Create/Delete Neon Branch for Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# If you plan to post PR comments (e.g., schema diffs) and read repo contents, add permissions:
+# permissions:
+#   contents: read
+#   pull-requests: write
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.branch_name.outputs.current_branch }}
+      pr_number: ${{ steps.meta.outputs.pr_number }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - id: branch_name
+        name: Get branch name
+        uses: tj-actions/branch-names@v8
+      - id: meta
+        name: Print PR metadata
+        run: |
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "PR #: ${{ github.event.pull_request.number }}"
+          echo "PR Head: ${{ github.event.pull_request.head.ref }}"
+          echo "PR Base: ${{ github.event.pull_request.base.ref }}"
+          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+
+  create_neon_branch:
+    name: Create Neon Branch
+    needs: setup
+    outputs:
+      database_url: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+      branch_id: ${{ steps.create_neon_branch.outputs.branch_id }}
+      branch_name: ${{ steps.create_neon_branch.outputs.branch_name || steps.meta.outputs.branch_name }}
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        github.event.action == 'synchronize' ||
+        github.event.action == 'opened' ||
+        github.event.action == 'reopened'
+      )
+    runs-on: ubuntu-latest
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+      # Optional: parent branch id or name to branch from (default: project's default/main)
+      NEON_PARENT_BRANCH_ID: ${{ secrets.NEON_PARENT_BRANCH_ID }}
+      # App database, user, and password to include in the preview connection string
+      NEON_DB_NAME: ${{ secrets.NEON_DB_NAME }}
+      NEON_DB_USER: ${{ secrets.NEON_DB_USER }}
+      NEON_DB_PASSWORD: ${{ secrets.NEON_DB_PASSWORD }}
+    steps:
+      - name: Validate required secrets
+        run: |
+          missing=()
+          for v in NEON_API_KEY NEON_PROJECT_ID NEON_DB_NAME NEON_DB_USER NEON_DB_PASSWORD; do
+            if [ -z "${!v}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "Missing required secrets: ${missing[*]}" >&2
+            exit 1
+          fi
+
+      - name: Determine action and branch name
+        id: meta
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          BRANCH_NAME=pr-${PR_NUMBER}
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "action=${{ github.event.action }}" >> $GITHUB_OUTPUT
+
+      - name: Get branch expiration date as an env variable (2 weeks from now)
+        id: get_expiration_date
+        run: echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
+      - name: Create Neon Branch
+        if: github.event.action != 'closed'
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          api_key: ${{ secrets.NEON_API_KEY }}
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          parent: ${{ secrets.NEON_PARENT_BRANCH_ID }}
+          database: ${{ secrets.NEON_DB_NAME }}
+          username: ${{ secrets.NEON_DB_USER }}
+          password: ${{ secrets.NEON_DB_PASSWORD }}
+          expires_at: ${{ env.EXPIRES_AT }}
+
+      # The step above creates a new Neon branch.
+      # You may want to do something with the new branch, such as run migrations,
+      # run tests on it, or send the connection details to a hosting platform environment.
+      # The branch DATABASE_URL is available to you via:
+      #   needs.create_neon_branch.outputs.database_url
+# Or directly from this job's step output:
+#   "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}".
+      - name: Encode database URL
+        id: create_neon_branch_encode
+        run: |
+          DB_URL='${{ steps.create_neon_branch.outputs.db_url_with_pooler }}'
+          DB_URL_ENC=$(printf '%s' "$DB_URL" | sed -e 's/%/%25/g' -e 's/\n/%0A/g' -e 's/\r/%0D/g')
+          echo "db_url=$DB_URL_ENC" >> $GITHUB_OUTPUT
+          echo "db_url_with_pooler=$DB_URL_ENC" >> $GITHUB_OUTPUT
+
+      # It's important you don't log the DATABASE_URL as output as it contains a username and password.
+      # If you need to display it, mask sensitive details as done below.
+      # For example, you can uncomment the lines below to run a database migration command:
+#      - name: Install dependencies
+#        run: npm ci
+#      - name: Generate Prisma client
+#        run: npx prisma generate
+#      - name: Run Migrations
+#        env:
+#          # to use pooled connection
+#          DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
+#          # OR to use unpooled connection
+#          # DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url }}"
+#        run: npx prisma migrate deploy
+#        # Or if you have an npm script:
+#        run: npm run db:migrate
+#      # Following the step above, which runs database migrations, you may want to check
+#      # application health or run your test suite against the preview branch database.
+#      # for schema changes in your database. We recommend using the following action to
+#      # validate and detect issues early.
+#      # You can also post a comment to your pull request with the schema diff. For this action to work,
+#      # ensure the workflow has permissions (uncomment and set at the top-level of this workflow):
+#      # permissions:
+#      #   contents: read
+#      #   pull-requests: write
+#      # Example steps:
+#      # You can also check out https://github.com/neondatabase/schema-diff-action for more information on how to use the schema diff action.
+#      # You can uncomment the lines below to enable the schema diff action.
+#      # - name: Generate Prisma schema diff
+#      #   env:
+#      #     DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
+#      #   run: |
+#      #     npx prisma migrate diff \
+#      #       --from-schema-datamodel ./prisma/schema.prisma \
+#      #       --to-url "$DATABASE_URL" \
+#      #       --script > schema.diff || true
+#      - name: Post Schema Diff Comment to PR
+#      #   if: success()
+#      #   uses: neondatabase/schema-diff-action@v1
+#      #   with:
+#      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+#      #     database_url: "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
+#      #     from_schema: ./prisma/schema.prisma
+#      #     comment_on_pr: true
+#      #     compare_branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+#      #     script: |
+#      #       const fs = require('fs');
+#      #       const diff = fs.readFileSync('schema.diff', 'utf8').slice(0, 60000);
+#      #       const pr = context.payload.pull_request.number;
+#      #       await github.rest.issues.createComment({
+#      #         owner: context.repo.owner,
+#      #         repo: context.repo.repo,
+#      #         issue_number: pr,
+#      #         body: `Prisma schema diff for preview DB:\n\n\`\`\`diff\n${diff}\n\`\`\``
+#      #       });
+#      - name: Run tests
+#        env:
+#          DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+#        run: npm test --if-present
+
+      - name: Comment preview database URL on PR (masked)
+        if: github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request.number;
+            const dbUrl = core.getInput('db_url', { required: true });
+            // Mask credentials
+            const masked = dbUrl.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:***@');
+            const body = `Preview Neon branch created for this PR.\n\nBranch: ${context.payload.pull_request.head.ref}\nDatabase URL (pooled, masked):\n\n\`${masked}\`\n\nNote: This URL is for preview builds only. Use GitHub/Vercel environment variables to wire it into preview deployments.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr,
+              body,
+            });
+        env:
+          db_url: ${{ steps.create_neon_branch_encode.outputs.db_url }}
+
+  delete_neon_branch:
+    name: Delete Neon Branch
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+    steps:
+      - name: Compute branch name
+        id: branch_meta
+        run: echo "branch_name=preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}" >> $GITHUB_OUTPUT
+      - name: Delete Neon Branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          api_key: ${{ secrets.NEON_API_KEY }}
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+

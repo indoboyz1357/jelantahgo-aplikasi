@@ -1,0 +1,60 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: jelantahgo_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-jelantahgo}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - jelantahgo_net
+
+  app:
+    build: .
+    container_name: jelantahgo_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      # Prisma expects a Postgres URL; connect to the db service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-jelantahgo}?schema=public
+      NEXT_PUBLIC_API_URL: https://${DOMAIN}
+      PORT: 3000
+    command: sh -c "npx prisma migrate deploy && npm run start"
+    expose:
+      - "3000"
+    networks:
+      - jelantahgo_net
+
+  caddy:
+    image: caddy:alpine
+    container_name: jelantahgo_caddy
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      EMAIL: ${EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - jelantahgo_net
+
+volumes:
+  db_data:
+
+networks:
+  jelantahgo_net:
+    driver: bridge

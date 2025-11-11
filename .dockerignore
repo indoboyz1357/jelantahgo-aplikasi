@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.next/cache
+.next/trace
+.next/types
+.next/static/development
+.env
+.env.local
+.git
+.gitignore
+**/tmp_rovodev_*
