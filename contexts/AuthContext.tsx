@@ -67,10 +67,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await axios.post('/api/auth/login', { email, password })
-    localStorage.setItem('token', response.data.token)
-    setUser(response.data.user)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
-    router.push('/dashboard')
+    const { token, user: userData } = response.data
+
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(userData))
+    setUser(userData)
+
+    // Redirect based on role
+    switch(userData.role) {
+      case 'ADMIN':
+        router.push('/admin')
+        break
+      case 'CUSTOMER':
+        router.push('/customer')
+        break
+      case 'COURIER':
+        router.push('/courier')
+        break
+      case 'WAREHOUSE':
+        router.push('/warehouse')
+        break
+      default:
+        router.push('/dashboard')
+    }
   }
 
   const logout = () => {

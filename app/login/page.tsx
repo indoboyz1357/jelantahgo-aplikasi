@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -18,41 +20,11 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        toast.success('Login berhasil!')
-        
-        // Redirect based on role
-        switch(data.user.role) {
-          case 'ADMIN':
-            router.push('/admin')
-            break
-          case 'CUSTOMER':
-            router.push('/customer')
-            break
-          case 'COURIER':
-            router.push('/courier')
-            break
-          case 'WAREHOUSE':
-            router.push('/warehouse')
-            break
-          default:
-            router.push('/dashboard')
-        }
-      } else {
-        toast.error(data.message || 'Login gagal')
-      }
-    } catch (error) {
-      toast.error('Terjadi kesalahan')
+      await login(formData.email, formData.password)
+      toast.success('Login berhasil!')
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Login gagal'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
