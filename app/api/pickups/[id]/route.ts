@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { getPricePerLiter, calculateCourierCommission, calculateAffiliateCommission } from '@/lib/pricing';
 
 // GET /api/pickups/[id]
 export async function GET(
@@ -117,14 +118,25 @@ export async function PATCH(
           );
         }
 
-        // Calculate actual prices based on actual volume
-        const actualTotalPrice = pickup.actualVolume * pickup.pricePerLiter;
-        const actualCourierFee = actualTotalPrice * 0.1;
-        const actualAffiliateFee = pickup.affiliateFee > 0 ? actualTotalPrice * 0.05 : 0;
+        // Calculate actual prices based on actual volume using settings
+        const actualPricePerLiter = await getPricePerLiter(pickup.actualVolume);
+        const actualTotalPrice = pickup.actualVolume * actualPricePerLiter;
+        const actualCourierFee = await calculateCourierCommission(pickup.actualVolume);
+
+        // Check if customer has referral for affiliate commission
+        let actualAffiliateFee = 0;
+        const customer = await prisma.user.findUnique({
+          where: { id: pickup.customerId },
+          select: { referredById: true }
+        });
+        if (customer?.referredById) {
+          actualAffiliateFee = await calculateAffiliateCommission(pickup.actualVolume);
+        }
 
         updateData = {
           ...updateData,
           status: 'COMPLETED',
+          pricePerLiter: actualPricePerLiter,
           totalPrice: actualTotalPrice,
           courierFee: actualCourierFee,
           affiliateFee: actualAffiliateFee

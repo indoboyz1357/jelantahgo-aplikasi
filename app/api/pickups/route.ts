@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { getPricePerLiter, calculateCourierCommission, calculateAffiliateCommission } from '@/lib/pricing';
 
 // GET /api/pickups - Get all pickups (filtered by role)
 export async function GET(request: NextRequest) {
@@ -99,15 +100,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pricePerLiter = 8000; // Fixed price
-    const totalPrice = volume * pricePerLiter;
-    const courierFee = totalPrice * 0.1; // 10% courier fee
+    // Calculate pricing based on volume tier
+    const volumeNum = parseFloat(volume);
+    const pricePerLiter = await getPricePerLiter(volumeNum);
+    const totalPrice = volumeNum * pricePerLiter;
+    const courierFee = await calculateCourierCommission(volumeNum);
 
     const pickup = await prisma.pickup.create({
       data: {
         customerId: targetCustomerId!,
         scheduledDate: new Date(scheduledDate),
-        volume: parseFloat(volume),
+        volume: volumeNum,
         pricePerLiter,
         totalPrice,
         courierFee,
@@ -126,15 +129,16 @@ export async function POST(request: NextRequest) {
 
     // Check if customer has referrer for affiliate fee
     const customer = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: targetCustomerId! },
       select: { referredById: true }
     });
 
     if (customer?.referredById) {
-      pickup.affiliateFee = totalPrice * 0.05; // 5% affiliate fee
+      const affiliateFee = await calculateAffiliateCommission(volumeNum);
+      pickup.affiliateFee = affiliateFee;
       await prisma.pickup.update({
         where: { id: pickup.id },
-        data: { affiliateFee: pickup.affiliateFee }
+        data: { affiliateFee }
       });
     }
 
