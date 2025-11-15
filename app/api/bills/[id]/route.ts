@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { notifyBillPaid } from '@/lib/notifications';
+import { sendPaymentReceivedEmail } from '@/lib/email';
 
 export async function PATCH(
   request: NextRequest,
@@ -14,7 +16,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status } = body;
+    const { status, paymentProof } = body;
 
     // Get bill
     const bill = await prisma.bill.findUnique({
@@ -51,21 +53,33 @@ export async function PATCH(
     let updateData: any = {};
 
     if (status === 'PAID') {
+      // Require payment proof
+      if (!paymentProof) {
+        return NextResponse.json(
+          { message: 'Payment proof is required' },
+          { status: 400 }
+        );
+      }
+
       updateData = {
         status: 'PAID',
-        paidDate: new Date()
+        paidDate: new Date(),
+        paymentProof
       };
 
-      // Create notification
-      await prisma.notification.create({
-        data: {
-          userId: bill.userId,
-          title: 'Pembayaran Diterima',
-          message: `Pembayaran tagihan ${bill.invoiceNumber} telah diterima`,
-          type: 'PAYMENT_RECEIVED',
-          relatedId: bill.id
-        }
-      });
+      // Create dashboard notification
+      await notifyBillPaid(bill.id, bill.userId, bill.amount, bill.invoiceNumber);
+
+      // Send email notification
+      if (bill.user.email) {
+        await sendPaymentReceivedEmail(
+          bill.user.email,
+          bill.user.name,
+          bill.invoiceNumber,
+          bill.amount,
+          'BILL'
+        );
+      }
     } else if (status === 'CANCELLED') {
       updateData = { status: 'CANCELLED' };
     }

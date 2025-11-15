@@ -75,10 +75,11 @@ model Bill {
   status       String   @default("UNPAID") // UNPAID, PAID, OVERDUE, CANCELLED
   dueDate      DateTime
   paidDate     DateTime?
+  paymentProof String?  // URL/path to payment proof/receipt
   invoiceNumber String   @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   pickup       Pickup   @relation(fields: [pickupId], references: [id])
   user         User     @relation(fields: [userId], references: [id])
 }
@@ -91,9 +92,10 @@ model Commission {
   amount       Float
   status       String   @default("PENDING") // PENDING, PAID, CANCELLED
   paidDate     DateTime?
+  paymentProof String?  // URL/path to payment proof/receipt
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   pickup       Pickup   @relation(fields: [pickupId], references: [id])
   user         User     @relation(fields: [userId], references: [id])
 }

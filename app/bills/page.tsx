@@ -20,6 +20,8 @@ export default function BillsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('ALL')
   const [detailsModal, setDetailsModal] = useState<any>(null)
+  const [paymentModal, setPaymentModal] = useState<any>(null)
+  const [paymentProof, setPaymentProof] = useState('')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -64,32 +66,53 @@ export default function BillsPage() {
     }
   }
 
-  const handlePayBill = async (billId: string) => {
-    if (!confirm('Konfirmasi pembayaran tagihan ini?')) return
+  const handlePayBill = (bill: any) => {
+    setPaymentModal({ type: 'bill', data: bill })
+    setPaymentProof('')
+  }
 
-    try {
-      const token = localStorage.getItem('token')
-      await axios.patch(`/api/bills/${billId}`,
-        { status: 'PAID' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      toast.success('Pembayaran berhasil!')
-      fetchData()
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Gagal memproses pembayaran')
+  const handlePayCommission = (commission: any) => {
+    setPaymentModal({ type: 'commission', data: commission })
+    setPaymentProof('')
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB')
+        return
+      }
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPaymentProof(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
-  const handlePayCommission = async (commissionId: string) => {
-    if (!confirm('Konfirmasi pembayaran komisi ini?')) return
+  const confirmPayment = async () => {
+    if (!paymentProof) {
+      toast.error('Silakan upload bukti pembayaran')
+      return
+    }
 
     try {
       const token = localStorage.getItem('token')
-      await axios.patch(`/api/commissions/${commissionId}`,
-        { status: 'PAID' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      if (paymentModal.type === 'bill') {
+        await axios.patch(`/api/bills/${paymentModal.data.id}`,
+          { status: 'PAID', paymentProof },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      } else {
+        await axios.patch(`/api/commissions/${paymentModal.data.id}`,
+          { status: 'PAID', paymentProof },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      }
       toast.success('Pembayaran berhasil!')
+      setPaymentModal(null)
+      setPaymentProof('')
       fetchData()
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Gagal memproses pembayaran')
@@ -241,7 +264,7 @@ export default function BillsPage() {
                             </button>
                             {bill.status === 'UNPAID' && canPayBills && (
                               <button
-                                onClick={() => handlePayBill(bill.id)}
+                                onClick={() => handlePayBill(bill)}
                                 className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                               >
                                 Bayar
@@ -321,7 +344,7 @@ export default function BillsPage() {
                             </button>
                             {commission.status === 'PENDING' && canPayBills && (
                               <button
-                                onClick={() => handlePayCommission(commission.id)}
+                                onClick={() => handlePayCommission(commission)}
                                 className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                               >
                                 Bayar
@@ -401,7 +424,7 @@ export default function BillsPage() {
                             </button>
                             {commission.status === 'PENDING' && canPayBills && (
                               <button
-                                onClick={() => handlePayCommission(commission.id)}
+                                onClick={() => handlePayCommission(commission)}
                                 className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                               >
                                 Bayar
@@ -519,6 +542,102 @@ export default function BillsPage() {
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                 >
                   Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {paymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Upload Bukti Pembayaran</h2>
+                <button
+                  onClick={() => {
+                    setPaymentModal(null)
+                    setPaymentProof('')
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Payment Info */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500 mb-1">
+                    {paymentModal.type === 'bill' ? 'Invoice' : 'Komisi'}
+                  </p>
+                  <p className="font-semibold text-gray-900">
+                    {paymentModal.type === 'bill'
+                      ? paymentModal.data.invoiceNumber
+                      : `${paymentModal.data.type} Commission`
+                    }
+                  </p>
+                  <p className="text-2xl font-bold text-green-600 mt-2">
+                    Rp {paymentModal.data.amount.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Penerima: {paymentModal.data.user?.name || paymentModal.data.pickup?.customer?.name}
+                  </p>
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bukti Pembayaran / Resi <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleFileUpload}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Upload foto transfer atau resi pembayaran (max 5MB)
+                  </p>
+                </div>
+
+                {/* Preview */}
+                {paymentProof && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                    {paymentProof.startsWith('data:image') ? (
+                      <img
+                        src={paymentProof}
+                        alt="Payment Proof"
+                        className="w-full max-h-64 object-contain rounded-lg border"
+                      />
+                    ) : (
+                      <div className="bg-gray-100 p-4 rounded-lg text-center">
+                        <p className="text-sm text-gray-600">PDF uploaded ✓</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => {
+                    setPaymentModal(null)
+                    setPaymentProof('')
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmPayment}
+                  disabled={!paymentProof}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Konfirmasi Pembayaran
                 </button>
               </div>
             </div>

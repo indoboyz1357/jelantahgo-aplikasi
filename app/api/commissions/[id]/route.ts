@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { notifyCommissionPaid } from '@/lib/notifications';
+import { sendCommissionPaymentEmail } from '@/lib/email';
 
 export async function PATCH(
   request: NextRequest,
@@ -14,7 +16,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status } = body;
+    const { status, paymentProof } = body;
 
     // Get commission
     const commission = await prisma.commission.findUnique({
@@ -44,21 +46,37 @@ export async function PATCH(
     let updateData: any = {};
 
     if (status === 'PAID') {
+      // Require payment proof
+      if (!paymentProof) {
+        return NextResponse.json(
+          { message: 'Payment proof is required' },
+          { status: 400 }
+        );
+      }
+
       updateData = {
         status: 'PAID',
-        paidDate: new Date()
+        paidDate: new Date(),
+        paymentProof
       };
 
-      // Create notification
-      await prisma.notification.create({
-        data: {
-          userId: commission.userId,
-          title: 'Komisi Dibayarkan',
-          message: `Komisi ${commission.type} sebesar Rp ${commission.amount.toLocaleString()} telah dibayarkan`,
-          type: 'PAYMENT_RECEIVED',
-          relatedId: commission.id
-        }
-      });
+      // Create dashboard notification
+      await notifyCommissionPaid(
+        commission.id,
+        commission.userId,
+        commission.amount,
+        commission.type as 'COURIER' | 'AFFILIATE'
+      );
+
+      // Send email notification
+      if (commission.user.email) {
+        await sendCommissionPaymentEmail(
+          commission.user.email,
+          commission.user.name,
+          commission.type as 'COURIER' | 'AFFILIATE',
+          commission.amount
+        );
+      }
     } else if (status === 'CANCELLED') {
       updateData = { status: 'CANCELLED' };
     }

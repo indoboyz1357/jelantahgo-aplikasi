@@ -83,3 +83,28 @@ export async function notifyPaymentDue(billId: string, userId: string, amount: n
     billId
   );
 }
+
+export async function notifyBillPaid(billId: string, userId: string, amount: number, invoiceNumber: string) {
+  await createNotification(
+    userId,
+    'Pembayaran Diterima',
+    `Pembayaran untuk invoice ${invoiceNumber} sebesar Rp ${amount.toLocaleString('id-ID')} telah diterima`,
+    'PAYMENT_RECEIVED',
+    billId
+  );
+}
+
+export async function notifyCommissionPaid(
+  commissionId: string,
+  userId: string,
+  amount: number,
+  type: 'COURIER' | 'AFFILIATE'
+) {
+  await createNotification(
+    userId,
+    'Komisi Dibayarkan',
+    `Komisi ${type === 'COURIER' ? 'kurir' : 'affiliate'} sebesar Rp ${amount.toLocaleString('id-ID')} telah dibayarkan`,
+    'PAYMENT_RECEIVED',
+    commissionId
+  );
+}
