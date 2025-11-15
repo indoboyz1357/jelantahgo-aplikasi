@@ -102,6 +102,14 @@ export default function AdminPage() {
       ]
     }
 
+    if (user?.role === 'WAREHOUSE') {
+      return [
+        ...baseItems,
+        { id: 'bills', label: 'Pembayaran', icon: FileText, href: '/bills' },
+        { id: 'profile', label: 'Profile', icon: User, href: '/profile' }
+      ]
+    }
+
     return [
       ...baseItems,
       { id: 'profile', label: 'Profile', icon: User, href: '/profile' }
@@ -195,10 +203,12 @@ export default function AdminPage() {
               <div className="text-sm md:text-base font-medium">All Pickups</div>
             </Link>
             
-            {(user?.role === 'CUSTOMER' || user?.role === 'ADMIN') && (
+            {(user?.role === 'CUSTOMER' || user?.role === 'ADMIN' || user?.role === 'WAREHOUSE') && (
               <Link href="/bills" className="group bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
                 <div className="text-3xl md:text-4xl mb-2">💳</div>
-                <div className="text-sm md:text-base font-medium">Bills</div>
+                <div className="text-sm md:text-base font-medium">
+                  {user?.role === 'WAREHOUSE' || user?.role === 'ADMIN' ? 'Pembayaran' : 'Bills'}
+                </div>
               </Link>
             )}
             

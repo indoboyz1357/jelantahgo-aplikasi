@@ -162,7 +162,7 @@ export default function WarehouseDashboard() {
   const bottomNavItems = [
     { id: 'home', label: 'Home', icon: Home, path: '/warehouse' },
     { id: 'receive', label: 'Receive', icon: ClipboardList, badge: stats.pendingReceive, path: '/warehouse/receive' },
-    { id: 'inventory', label: 'Inventory', icon: BarChart3, path: '/warehouse/inventory' },
+    { id: 'bills', label: 'Pembayaran', icon: FileText, path: '/bills' },
     { id: 'profile', label: 'Profile', icon: User, path: '/profile' }
   ]
 
@@ -381,8 +381,15 @@ export default function WarehouseDashboard() {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-2">
-                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                <button
+                  onClick={() => router.push('/bills')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
                   <FileText className="w-5 h-5 text-purple-600" />
+                  <span className="text-sm font-medium text-gray-700">Pembayaran Customer</span>
+                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                  <FileText className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-medium text-gray-700">Laporan Harian</span>
                 </button>
                 <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
