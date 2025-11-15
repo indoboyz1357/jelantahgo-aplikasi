@@ -134,10 +134,8 @@ export default function AdminUsersPage() {
       const token = localStorage.getItem('token')
       if (!token) return
 
-      const updateData = { ...formData }
-      if (!updateData.password) {
-        delete updateData.password
-      }
+      const { password, ...updateData } = formData
+      const dataToSend = password ? { ...updateData, password } : updateData
 
       const res = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
@@ -145,7 +143,7 @@ export default function AdminUsersPage() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(dataToSend)
       })
 
       if (res.ok) {
