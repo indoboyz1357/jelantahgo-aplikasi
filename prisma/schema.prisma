@@ -121,6 +121,49 @@ model Notification {
   isRead       Boolean  @default(false)
   relatedId    String?
   createdAt    DateTime @default(now())
-  
+
   user         User     @relation(fields: [userId], references: [id])
+}
+
+model Settings {
+  id                    String   @id @default(uuid())
+
+  // Pricing Settings (Tiered)
+  priceTier1Min         Float    @default(1)      // 1 liter
+  priceTier1Max         Float    @default(99)     // 99 liters
+  priceTier1Rate        Float    @default(6500)   // Rp 6500/liter
+
+  priceTier2Min         Float    @default(100)    // 100 liters
+  priceTier2Max         Float    @default(199)    // 199 liters
+  priceTier2Rate        Float    @default(7000)   // Rp 7000/liter
+
+  priceTier3Min         Float    @default(200)    // 200+ liters
+  priceTier3Rate        Float    @default(7500)   // Rp 7500/liter
+
+  // Courier Commission
+  courierCommissionPerLiter Float @default(500)   // Rp 500/liter
+  courierDailySalary        Float @default(50000) // Rp 50000/day
+
+  // Affiliate Commission
+  affiliateCommissionPerLiter Float @default(200) // Rp 200/liter
+
+  // System Settings
+  appName               String   @default("JelantahGO")
+  contactPhone          String   @default("")
+  contactEmail          String   @default("")
+  companyAddress        String   @default("")
+
+  // Notification Settings
+  emailTemplate         String   @default("")
+  smsTemplate           String   @default("")
+  reminderHours         Int      @default(24)     // Hours before reminder
+
+  // Other Settings
+  operatingHoursStart   String   @default("08:00")
+  operatingHoursEnd     String   @default("17:00")
+  serviceArea           String   @default("")     // JSON array of areas
+  minimumPickupVolume   Float    @default(40)     // 40 liters minimum
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

@@ -1,0 +1,30 @@
+-- CreateTable
+CREATE TABLE "Settings" (
+    "id" TEXT NOT NULL,
+    "priceTier1Min" DOUBLE PRECISION NOT NULL DEFAULT 1,
+    "priceTier1Max" DOUBLE PRECISION NOT NULL DEFAULT 99,
+    "priceTier1Rate" DOUBLE PRECISION NOT NULL DEFAULT 6500,
+    "priceTier2Min" DOUBLE PRECISION NOT NULL DEFAULT 100,
+    "priceTier2Max" DOUBLE PRECISION NOT NULL DEFAULT 199,
+    "priceTier2Rate" DOUBLE PRECISION NOT NULL DEFAULT 7000,
+    "priceTier3Min" DOUBLE PRECISION NOT NULL DEFAULT 200,
+    "priceTier3Rate" DOUBLE PRECISION NOT NULL DEFAULT 7500,
+    "courierCommissionPerLiter" DOUBLE PRECISION NOT NULL DEFAULT 500,
+    "courierDailySalary" DOUBLE PRECISION NOT NULL DEFAULT 50000,
+    "affiliateCommissionPerLiter" DOUBLE PRECISION NOT NULL DEFAULT 200,
+    "appName" TEXT NOT NULL DEFAULT 'JelantahGO',
+    "contactPhone" TEXT NOT NULL DEFAULT '',
+    "contactEmail" TEXT NOT NULL DEFAULT '',
+    "companyAddress" TEXT NOT NULL DEFAULT '',
+    "emailTemplate" TEXT NOT NULL DEFAULT '',
+    "smsTemplate" TEXT NOT NULL DEFAULT '',
+    "reminderHours" INTEGER NOT NULL DEFAULT 24,
+    "operatingHoursStart" TEXT NOT NULL DEFAULT '08:00',
+    "operatingHoursEnd" TEXT NOT NULL DEFAULT '17:00',
+    "serviceArea" TEXT NOT NULL DEFAULT '',
+    "minimumPickupVolume" DOUBLE PRECISION NOT NULL DEFAULT 40,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Settings_pkey" PRIMARY KEY ("id")
+);
