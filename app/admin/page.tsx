@@ -95,7 +95,7 @@ export default function AdminPage() {
     if (user?.role === 'ADMIN') {
       return [
         ...baseItems,
-        { id: 'users', label: 'Users', icon: Users, href: '/users' },
+        { id: 'users', label: 'Users', icon: Users, href: '/admin/users' },
         { id: 'bills', label: 'Bills', icon: FileText, href: '/bills' },
         { id: 'profile', label: 'Profile', icon: User, href: '/profile' }
       ]
@@ -172,6 +172,13 @@ export default function AdminPage() {
               <Link href="/admin/pickups/new" className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
                 <div className="text-3xl md:text-4xl mb-2">🚀</div>
                 <div className="text-sm md:text-base font-medium">Quick Pickup</div>
+              </Link>
+            )}
+            
+            {user?.role === 'ADMIN' && (
+              <Link href="/admin/users" className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                <div className="text-3xl md:text-4xl mb-2">👥</div>
+                <div className="text-sm md:text-base font-medium">User Management</div>
               </Link>
             )}
             
