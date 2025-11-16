@@ -20,8 +20,8 @@ model User {
   kelurahan       String?  // OPSIONAL
   kecamatan       String?  // OPSIONAL
   kota            String   // WAJIB
-  latitude        Float    // WAJIB - dari Share Lokasi
-  longitude       Float    // WAJIB - dari Share Lokasi
+  latitude        Float?   // WAJIB untuk customer, opsional untuk role lain
+  longitude       Float?   // WAJIB untuk customer, opsional untuk role lain
   shareLocationUrl String? // OPSIONAL - Google Maps URL untuk kemudahan kurir
   role            String   @default("CUSTOMER") // ADMIN, CUSTOMER, COURIER, WAREHOUSE
   isActive        Boolean  @default(true)
