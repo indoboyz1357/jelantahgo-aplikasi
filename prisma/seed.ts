@@ -19,6 +19,7 @@ async function main() {
       name: 'Admin JelantahGO',
       phone: '081234567890',
       address: 'Jakarta Pusat',
+      kota: 'Jakarta Pusat',
       role: 'ADMIN',
       isActive: true,
       referralCode: 'ADMIN001'
@@ -36,6 +37,9 @@ async function main() {
       name: 'Budi Santoso',
       phone: '081234567891',
       address: 'Jl. Kebon Jeruk No. 12, Jakarta Barat',
+      kota: 'Jakarta Barat',
+      latitude: -6.200000,
+      longitude: 106.816666,
       role: 'CUSTOMER',
       isActive: true,
       referralCode: 'CUST001'
@@ -52,6 +56,9 @@ async function main() {
       name: 'Siti Aminah',
       phone: '081234567892',
       address: 'Jl. Melati No. 45, Jakarta Selatan',
+      kota: 'Jakarta Selatan',
+      latitude: -6.200000,
+      longitude: 106.816666,
       role: 'CUSTOMER',
       isActive: true,
       referralCode: 'CUST002'
@@ -69,6 +76,7 @@ async function main() {
       name: 'Andi Wijaya',
       phone: '081234567893',
       address: 'Jakarta Barat',
+      kota: 'Jakarta Barat',
       role: 'COURIER',
       isActive: true,
       referralCode: 'COUR001'
@@ -85,6 +93,7 @@ async function main() {
       name: 'Budi Pratama',
       phone: '081234567894',
       address: 'Jakarta Timur',
+      kota: 'Jakarta Timur',
       role: 'COURIER',
       isActive: true,
       referralCode: 'COUR002'
@@ -102,6 +111,7 @@ async function main() {
       name: 'Warehouse Manager',
       phone: '081234567895',
       address: 'Gudang Pusat Jakarta',
+      kota: 'Jakarta Pusat',
       role: 'WAREHOUSE',
       isActive: true,
       referralCode: 'WARE001'
