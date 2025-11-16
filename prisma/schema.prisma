@@ -12,15 +12,21 @@ datasource db {
 
 model User {
   id              String   @id @default(uuid())
-  email           String   @unique
+  email           String?  @unique // OPSIONAL untuk customer
   password        String
-  name            String
-  phone           String
-  address         String?
+  name            String   // WAJIB
+  phone           String   @unique // WAJIB dan unique
+  address         String   // WAJIB - Alamat Lengkap
+  kelurahan       String?  // OPSIONAL
+  kecamatan       String?  // OPSIONAL
+  kota            String   // WAJIB
+  latitude        Float    // WAJIB - dari Share Lokasi
+  longitude       Float    // WAJIB - dari Share Lokasi
+  shareLocationUrl String? // OPSIONAL - Google Maps URL untuk kemudahan kurir
   role            String   @default("CUSTOMER") // ADMIN, CUSTOMER, COURIER, WAREHOUSE
   isActive        Boolean  @default(true)
   referralCode    String   @unique
-  referredById    String?
+  referredById    String?  // OPSIONAL - Di referensikan oleh
   lastOrderDate   DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -56,6 +62,9 @@ model Pickup {
   photoProof       String?  // URL/path to pickup photo proof
   latitude         Float?
   longitude        Float?
+  bankName         String?  // Customer's bank name
+  accountName      String?  // Customer's account holder name
+  accountNumber    String?  // Customer's account number
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

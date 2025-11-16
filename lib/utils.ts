@@ -11,3 +11,33 @@ export function normalizePhone(raw: string | undefined | null): string {
   }
   return digits
 }
+
+import prisma from './prisma';
+
+/**
+ * Generate unique referral code
+ */
+export async function generateReferralCode(): Promise<string> {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  let isUnique = false;
+
+  while (!isUnique) {
+    // Generate 8 character code
+    code = '';
+    for (let i = 0; i < 8; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    // Check if code already exists
+    const existing = await prisma.user.findUnique({
+      where: { referralCode: code }
+    });
+
+    if (!existing) {
+      isUnique = true;
+    }
+  }
+
+  return code;
+}

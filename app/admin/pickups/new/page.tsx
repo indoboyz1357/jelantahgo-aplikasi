@@ -56,7 +56,7 @@ export default function AdminNewPickupPage() {
       const res = await axios.get(`/api/users?role=CUSTOMER&search=${encodeURIComponent(q)}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setUsers(res.data.users)
+      setUsers(res.data)
     } catch (err) {
       console.error(err)
       toast.error('Failed to load customers')

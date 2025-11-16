@@ -93,12 +93,78 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, phone, address, role, password } = body;
+    const { 
+      name, 
+      email: rawEmail, 
+      phone: rawPhone, 
+      address, 
+      kelurahan,
+      kecamatan,
+      kota,
+      latitude,
+      longitude,
+      shareLocationUrl,
+      referralCode: referredByCode,
+      role, 
+      password 
+    } = body;
 
-    // Validate required fields
-    if (!name || !email || !phone || !password || !role) {
+    // Normalize phone
+    const phone = normalizePhone(rawPhone);
+
+    // Validate required fields for CUSTOMER
+    if (role === 'CUSTOMER') {
+      if (!name || !phone || !address || !kota) {
+        return NextResponse.json(
+          { message: 'Field wajib: Nama, No HP, Alamat Lengkap, dan Kota harus diisi' },
+          { status: 400 }
+        );
+      }
+
+      // Validasi latitude & longitude (Share Lokasi WAJIB untuk CUSTOMER)
+      if (latitude === undefined || longitude === undefined || 
+          latitude === null || longitude === null) {
+        return NextResponse.json(
+          { message: 'Share Lokasi wajib diisi untuk customer (latitude & longitude)' },
+          { status: 400 }
+        );
+      }
+
+      // Validasi format latitude & longitude
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return NextResponse.json(
+          { message: 'Format Share Lokasi tidak valid' },
+          { status: 400 }
+        );
+      }
+    } else {
+      // For non-customer roles, basic validation
+      if (!name || !phone || !role || !password) {
+        return NextResponse.json(
+          { message: 'Missing required fields' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Email handling (opsional untuk customer)
+    let email = (rawEmail || '').trim();
+    if (!email) {
+      const base = (phone || 'user').replace(/[^a-zA-Z0-9]/g, '');
+      email = `${base}-${Date.now()}@jelantahgo.local`;
+    }
+
+    // Check if phone already exists
+    const existingPhone = await prisma.user.findUnique({
+      where: { phone }
+    });
+
+    if (existingPhone) {
       return NextResponse.json(
-        { message: 'Missing required fields' },
+        { message: 'Nomor HP sudah terdaftar' },
         { status: 400 }
       );
     }
@@ -115,21 +181,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Find referrer if referral code provided
+    let referrerId = null;
+    if (referredByCode) {
+      const referrer = await prisma.user.findUnique({
+        where: { referralCode: referredByCode }
+      });
+      
+      if (referrer) {
+        referrerId = referrer.id;
+      } else {
+        return NextResponse.json(
+          { message: 'Kode referral tidak valid' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user with unique referral code
-    let referralCode = randomUUID().slice(0, 8).toUpperCase();
+    let newReferralCode = randomUUID().slice(0, 8).toUpperCase();
     let codeExists = true;
     while (codeExists) {
       const existing = await prisma.user.findUnique({
-        where: { referralCode }
+        where: { referralCode: newReferralCode }
       });
       if (!existing) {
         codeExists = false;
       } else {
-        referralCode = randomUUID().slice(0, 8).toUpperCase();
+        newReferralCode = randomUUID().slice(0, 8).toUpperCase();
       }
     }
 
@@ -139,9 +222,16 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         address: address || null,
+        kelurahan: kelurahan || null,
+        kecamatan: kecamatan || null,
+        kota: kota || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        shareLocationUrl: shareLocationUrl || null,
         role,
         password: hashedPassword,
-        referralCode,
+        referralCode: newReferralCode,
+        referredById: referrerId,
         isActive: true
       },
       select: {
@@ -150,6 +240,12 @@ export async function POST(request: NextRequest) {
         name: true,
         phone: true,
         address: true,
+        kelurahan: true,
+        kecamatan: true,
+        kota: true,
+        latitude: true,
+        longitude: true,
+        shareLocationUrl: true,
         role: true,
         isActive: true,
         referralCode: true,

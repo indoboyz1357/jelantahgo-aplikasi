@@ -36,7 +36,10 @@ export default function CourierDashboard() {
   const [selectedPickup, setSelectedPickup] = useState<any>(null)
   const [uploadData, setUploadData] = useState({
     photoProof: '',
-    actualVolume: ''
+    actualVolume: '',
+    bankName: '',
+    accountName: '',
+    accountNumber: ''
   })
 
   useEffect(() => {
@@ -168,6 +171,11 @@ export default function CourierDashboard() {
       return
     }
 
+    if (!uploadData.bankName || !uploadData.accountName || !uploadData.accountNumber) {
+      alert('Harap lengkapi data rekening customer')
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`/api/pickups/${selectedPickup.id}`, {
@@ -178,14 +186,17 @@ export default function CourierDashboard() {
         },
         body: JSON.stringify({
           photoProof: uploadData.photoProof,
-          actualVolume: uploadData.actualVolume
+          actualVolume: uploadData.actualVolume,
+          bankName: uploadData.bankName,
+          accountName: uploadData.accountName,
+          accountNumber: uploadData.accountNumber
         })
       })
 
       if (res.ok) {
         alert('Data berhasil diupdate!')
         setShowUploadModal(false)
-        setUploadData({ photoProof: '', actualVolume: '' })
+        setUploadData({ photoProof: '', actualVolume: '', bankName: '', accountName: '', accountNumber: '' })
         const currentToken = localStorage.getItem('token')
         if (currentToken) {
           fetchAssignedPickups(currentToken)
@@ -204,7 +215,10 @@ export default function CourierDashboard() {
     setSelectedPickup(pickup)
     setUploadData({
       photoProof: pickup.photoProof || '',
-      actualVolume: pickup.actualVolume || ''
+      actualVolume: pickup.actualVolume || '',
+      bankName: pickup.bankName || '',
+      accountName: pickup.accountName || '',
+      accountNumber: pickup.accountNumber || ''
     })
     setShowUploadModal(true)
   }
@@ -549,12 +563,71 @@ export default function CourierDashboard() {
                 )}
               </div>
 
+              {/* Bank Account Info */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Rekening Customer untuk Transfer Pembayaran</h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nama Bank *
+                    </label>
+                    <input
+                      type="text"
+                      value={uploadData.bankName}
+                      onChange={(e) => setUploadData(prev => ({ ...prev, bankName: e.target.value }))}
+                      placeholder="Contoh: BCA, Mandiri, BRI"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Atas Nama *
+                    </label>
+                    <input
+                      type="text"
+                      value={uploadData.accountName}
+                      onChange={(e) => setUploadData(prev => ({ ...prev, accountName: e.target.value }))}
+                      placeholder="Nama pemilik rekening"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nomor Rekening *
+                    </label>
+                    <input
+                      type="text"
+                      value={uploadData.accountNumber}
+                      onChange={(e) => setUploadData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                      placeholder="Nomor rekening bank"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Show calculated prices */}
+                {selectedPickup && uploadData.actualVolume && (
+                  <div className="mt-4 bg-green-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Info Pembayaran (otomatis dihitung):</p>
+                    <p className="text-sm font-semibold text-green-700">
+                      Total yang akan ditransfer ke customer
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      (Akan dihitung otomatis berdasarkan volume aktual dan harga per liter saat ini)
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Buttons */}
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => {
                     setShowUploadModal(false)
-                    setUploadData({ photoProof: '', actualVolume: '' })
+                    setUploadData({ photoProof: '', actualVolume: '', bankName: '', accountName: '', accountNumber: '' })
                   }}
                   className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >

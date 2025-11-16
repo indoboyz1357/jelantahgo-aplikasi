@@ -63,7 +63,7 @@ export async function PATCH(
     if (!user) return unauthorizedResponse();
 
     const body = await request.json();
-    const { status, courierId, warehouseId, photoProof, actualVolume } = body;
+    const { status, courierId, warehouseId, photoProof, actualVolume, bankName, accountName, accountNumber } = body;
 
     const pickup = await prisma.pickup.findUnique({
       where: { id: params.id }
@@ -78,16 +78,20 @@ export async function PATCH(
 
     let updateData: any = {};
 
-    // Handle photo proof and actual volume updates (for IN_PROGRESS pickups)
-    if ((photoProof !== undefined || actualVolume !== undefined) && user.role === 'COURIER' && pickup.courierId === user.id) {
+    // Handle photo proof, actual volume, and bank account updates (for IN_PROGRESS pickups)
+    if ((photoProof !== undefined || actualVolume !== undefined || bankName !== undefined || accountName !== undefined || accountNumber !== undefined)
+        && user.role === 'COURIER' && pickup.courierId === user.id) {
       if (pickup.status !== 'IN_PROGRESS') {
         return NextResponse.json(
-          { message: 'Can only update photo and volume during IN_PROGRESS status' },
+          { message: 'Can only update photo, volume, and bank account during IN_PROGRESS status' },
           { status: 400 }
         );
       }
       if (photoProof !== undefined) updateData.photoProof = photoProof;
       if (actualVolume !== undefined) updateData.actualVolume = parseFloat(actualVolume);
+      if (bankName !== undefined) updateData.bankName = bankName;
+      if (accountName !== undefined) updateData.accountName = accountName;
+      if (accountNumber !== undefined) updateData.accountNumber = accountNumber;
     }
 
     // Handle status updates based on role

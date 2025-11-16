@@ -52,6 +52,13 @@ export default function AdminUsersPage() {
     email: '',
     phone: '',
     address: '',
+    kelurahan: '',
+    kecamatan: '',
+    kota: '',
+    latitude: '',
+    longitude: '',
+    shareLocationUrl: '',
+    referralCode: '',
     role: 'CUSTOMER',
     password: ''
   })
@@ -194,6 +201,13 @@ export default function AdminUsersPage() {
       email: user.email,
       phone: user.phone,
       address: user.address || '',
+      kelurahan: (user as any).kelurahan || '',
+      kecamatan: (user as any).kecamatan || '',
+      kota: (user as any).kota || '',
+      latitude: (user as any).latitude?.toString() || '',
+      longitude: (user as any).longitude?.toString() || '',
+      shareLocationUrl: (user as any).shareLocationUrl || '',
+      referralCode: '',
       role: user.role,
       password: ''
     })
@@ -206,6 +220,13 @@ export default function AdminUsersPage() {
       email: '',
       phone: '',
       address: '',
+      kelurahan: '',
+      kecamatan: '',
+      kota: '',
+      latitude: '',
+      longitude: '',
+      shareLocationUrl: '',
+      referralCode: '',
       role: 'CUSTOMER',
       password: ''
     })
@@ -529,16 +550,56 @@ function UserModal({
   setShowPassword,
   isEdit
 }: UserModalProps) {
+  const [loadingLocation, setLoadingLocation] = useState(false)
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Browser Anda tidak mendukung geolocation')
+      return
+    }
+
+    setLoadingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        
+        setFormData({
+          ...formData,
+          latitude: lat.toString(),
+          longitude: lng.toString(),
+          shareLocationUrl: `https://www.google.com/maps?q=${lat},${lng}`
+        })
+        
+        alert('Lokasi berhasil didapatkan!')
+        setLoadingLocation(false)
+      },
+      (error) => {
+        console.error('Geolocation error:', error)
+        alert('Gagal mendapatkan lokasi')
+        setLoadingLocation(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
+  }
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-4">
+        <form onSubmit={onSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Nama */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nama Lengkap <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               required
@@ -548,38 +609,154 @@ function UserModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+          {/* Grid 2 kolom */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* No HP */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                No. Handphone <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-gray-400 text-xs">(Opsional)</span>
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
           </div>
 
+          {/* Alamat Lengkap */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Telepon</label>
-            <input
-              type="tel"
-              required
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Alamat Lengkap <span className="text-red-500">*</span>
+            </label>
             <textarea
+              required
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               rows={2}
+              placeholder="Jl. Contoh No. 123, RT/RW"
             />
           </div>
 
+          {/* Grid 3 kolom untuk Kelurahan, Kecamatan, Kota */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Kelurahan */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kelurahan <span className="text-gray-400 text-xs">(Opsional)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.kelurahan || ''}
+                onChange={(e) => setFormData({ ...formData, kelurahan: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Kelurahan"
+              />
+            </div>
+
+            {/* Kecamatan */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kecamatan <span className="text-gray-400 text-xs">(Opsional)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.kecamatan || ''}
+                onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Kecamatan"
+              />
+            </div>
+
+            {/* Kota */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kota <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.kota || ''}
+                onChange={(e) => setFormData({ ...formData, kota: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Jakarta, Surabaya, dll"
+              />
+            </div>
+          </div>
+
+          {/* Share Lokasi */}
+          <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Share Lokasi <span className="text-red-500">*</span>
+            </label>
+            <p className="text-xs text-gray-600 mb-3">
+              Diperlukan agar kurir dapat menemukan lokasi dengan mudah
+            </p>
+            
+            <button
+              type="button"
+              onClick={getCurrentLocation}
+              disabled={loadingLocation}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loadingLocation ? 'Mengambil Lokasi...' : '📍 Ambil Lokasi Saya'}
+            </button>
+
+            {formData.latitude && formData.longitude && (
+              <div className="mt-3 p-2 bg-white rounded border border-green-300">
+                <p className="text-xs text-gray-600">
+                  <strong>Koordinat:</strong> {parseFloat(formData.latitude).toFixed(6)}, {parseFloat(formData.longitude).toFixed(6)}
+                </p>
+                {formData.shareLocationUrl && (
+                  <a 
+                    href={formData.shareLocationUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-green-600 hover:text-green-800 underline mt-1 block"
+                  >
+                    Lihat di Google Maps →
+                  </a>
+                )}
+              </div>
+            )}
+
+            <input type="hidden" required={!isEdit} value={formData.latitude || ''} />
+            <input type="hidden" required={!isEdit} value={formData.longitude || ''} />
+          </div>
+
+          {/* Referred By */}
+          {!isEdit && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Referred By / Kode Referral <span className="text-gray-400 text-xs">(Opsional)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.referralCode || ''}
+                onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Kode referral (jika ada)"
+              />
+            </div>
+          )}
+
+          {/* Role */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
             <select
@@ -595,6 +772,7 @@ function UserModal({
             </select>
           </div>
 
+          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {isEdit ? 'Password (Kosongkan jika tidak ingin mengubah)' : 'Password'}
