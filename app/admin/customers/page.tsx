@@ -52,6 +52,9 @@ interface Customer {
     pickupsAsCustomer: number
     referrals: number
   }
+  totalVolume?: number
+  downlineCount?: number
+  downlineTotalVolume?: number
 }
 
 interface ReferrerOption {
@@ -440,90 +443,105 @@ export default function AdminCustomersPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Customer
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nama
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Kontak
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        No HP
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Lokasi
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Terakhir Setor
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lama Tidak Setor
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Pickup
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total Setoran (L)
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jumlah Downline
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Setoran Downline (L)
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Aksi
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredCustomers.map((customer) => (
-                      <tr key={customer.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <User className="h-5 w-5 text-green-600" />
-                              </div>
+                    {filteredCustomers.map((customer) => {
+                      // Calculate days since last order
+                      let daysSinceLastOrder = '-';
+                      if (customer.lastOrderDate) {
+                        const lastDate = new Date(customer.lastOrderDate);
+                        const now = new Date();
+                        const diffTime = Math.abs(now.getTime() - lastDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        daysSinceLastOrder = `${diffDays} hari`;
+                      }
+
+                      return (
+                        <tr key={customer.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4">
+                            <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                            <div className="text-xs text-gray-500">{customer.kota}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{customer.phone}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {customer.lastOrderDate
+                                ? new Date(customer.lastOrderDate).toLocaleDateString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })
+                                : 'Belum pernah'}
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                              <div className="text-sm text-gray-500">{customer.referralCode}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{daysSinceLastOrder}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              {(customer.totalVolume || 0).toFixed(1)}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{customer.phone}</div>
-                          {customer.email && (
-                            <div className="text-sm text-gray-500">{customer.email}</div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{customer.kota}</div>
-                          <div className="text-sm text-gray-500">
-                            {customer.kelurahan && `${customer.kelurahan}, `}
-                            {customer.kecamatan}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            customer.isActive
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {customer.isActive ? 'Aktif' : 'Tidak Aktif'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {customer._count?.pickupsAsCustomer || 0}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => openDetailModal(customer)}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Detail"
-                            >
-                              <Eye className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => openEditModal(customer)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="Edit"
-                            >
-                              <Edit2 className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => openGoogleMaps(customer.latitude, customer.longitude)}
-                              className="text-green-600 hover:text-green-900"
-                              title="Lokasi"
-                            >
-                              <Navigation className="h-5 w-5" />
-                            </button>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              {customer.downlineCount || 0}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              {(customer.downlineTotalVolume || 0).toFixed(1)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => openDetailModal(customer)}
+                                className="text-blue-600 hover:text-blue-900"
+                                title="Detail"
+                              >
+                                <Eye className="h-5 w-5" />
+                              </button>
+                              <button
+                                onClick={() => openEditModal(customer)}
+                                className="text-indigo-600 hover:text-indigo-900"
+                                title="Edit"
+                              >
+                                <Edit2 className="h-5 w-5" />
+                              </button>
+                              <button
+                                onClick={() => openGoogleMaps(customer.latitude, customer.longitude)}
+                                className="text-green-600 hover:text-green-900"
+                                title="Lokasi"
+                              >
+                                <Navigation className="h-5 w-5" />
+                              </button>
                             <button
                               onClick={() => handleDelete(customer.id)}
                               className="text-red-600 hover:text-red-900"

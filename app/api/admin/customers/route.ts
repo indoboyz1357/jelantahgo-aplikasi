@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const [customers, total] = await Promise.all([
+    const [customersData, total] = await Promise.all([
       prisma.user.findMany({
         where,
         select: {
@@ -87,8 +87,52 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where })
     ]);
 
+    // Enrich customers with analytics data
+    const customersWithAnalytics = await Promise.all(
+      customersData.map(async (customer) => {
+        // Get total volume from completed pickups
+        const totalVolumeResult = await prisma.pickup.aggregate({
+          where: {
+            customerId: customer.id,
+            status: 'COMPLETED'
+          },
+          _sum: {
+            actualVolume: true
+          }
+        });
+
+        // Get downline IDs
+        const downlineIds = await prisma.user.findMany({
+          where: { referredById: customer.id },
+          select: { id: true }
+        });
+
+        // Get total volume from downline's completed pickups
+        let downlineTotalVolume = 0;
+        if (downlineIds.length > 0) {
+          const downlineVolumeResult = await prisma.pickup.aggregate({
+            where: {
+              customerId: { in: downlineIds.map(d => d.id) },
+              status: 'COMPLETED'
+            },
+            _sum: {
+              actualVolume: true
+            }
+          });
+          downlineTotalVolume = downlineVolumeResult._sum.actualVolume || 0;
+        }
+
+        return {
+          ...customer,
+          totalVolume: totalVolumeResult._sum.actualVolume || 0,
+          downlineCount: customer._count.referrals,
+          downlineTotalVolume
+        };
+      })
+    );
+
     return NextResponse.json({
-      customers,
+      customers: customersWithAnalytics,
       pagination: {
         total,
         page,
