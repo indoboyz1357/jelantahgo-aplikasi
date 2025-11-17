@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       latitude,              // WAJIB - dari Share Lokasi
       longitude,             // WAJIB - dari Share Lokasi
       shareLocationUrl,      // OPSIONAL - Google Maps share link
-      referralCode           // OPSIONAL - Di referensikan oleh
+      referralCode           // OPSIONAL - Nomor HP yang mereferensikan (di referensikan oleh)
     } = await request.json();
 
     // ====== VALIDASI FIELD WAJIB ======
@@ -94,18 +94,21 @@ export async function POST(request: Request) {
       password = Math.random().toString(36).slice(-10) + 'A1!';
     }
 
-    // ====== FIND REFERRER (OPSIONAL) ======
+    // ====== FIND REFERRER BY PHONE (OPSIONAL) ======
     let referrerId = null;
     if (referralCode) {
+      // Normalize phone number untuk referral
+      const referrerPhone = normalizePhone(referralCode);
+
       const referrer = await prisma.user.findUnique({
-        where: { referralCode }
+        where: { phone: referrerPhone }
       });
-      
+
       if (referrer) {
         referrerId = referrer.id;
       } else {
         return NextResponse.json(
-          { message: 'Kode referral tidak valid' },
+          { message: 'Nomor HP referral tidak ditemukan. Pastikan nomor HP yang mereferensikan sudah terdaftar.' },
           { status: 400 }
         );
       }

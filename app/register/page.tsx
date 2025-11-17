@@ -341,20 +341,20 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* Kode Referral - OPSIONAL */}
+          {/* Nomor HP Referral - OPSIONAL */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Referred By / Kode Referral <span className="text-gray-400 text-xs">(Opsional)</span>
+              Direferensikan Oleh <span className="text-gray-400 text-xs">(Opsional)</span>
             </label>
             <input
-              type="text"
+              type="tel"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               value={formData.referralCode}
               onChange={(e) => setFormData({...formData, referralCode: e.target.value})}
-              placeholder="Masukkan kode referral jika ada"
+              placeholder="08123456789"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Dapatkan bonus dengan menggunakan kode referral dari teman
+              Masukkan nomor HP teman yang mereferensikan Anda (jika ada)
             </p>
           </div>
 

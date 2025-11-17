@@ -256,14 +256,17 @@ export default function AdminNewPickupPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Referred By <span className="text-gray-400">(Opsional)</span></label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Direferensikan Oleh <span className="text-gray-400">(Opsional)</span></label>
                       <input
-                        type="text"
-                        placeholder="Kode referral"
+                        type="tel"
+                        placeholder="08123456789"
                         value={registerForm.referralCode}
                         onChange={(e) => setRegisterForm({ ...registerForm, referralCode: e.target.value })}
                         className="w-full px-3 py-2 border rounded-md text-sm"
                       />
+                      <div className="mt-1 text-xs text-gray-500">
+                        Masukkan nomor HP yang mereferensikan customer ini
+                      </div>
                     </div>
                   </div>
 
