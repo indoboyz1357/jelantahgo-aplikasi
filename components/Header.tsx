@@ -64,26 +64,14 @@ export default function Header() {
               {user.role === 'ADMIN' ? (
                 // Admin Navigation
                 <>
-                  <Link href="/admin/pickups/new" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
-                    Quick Pickup
-                  </Link>
-                  <Link href="/pickups" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
-                    All Pickups
-                  </Link>
-                  <Link href="/bills" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
-                    Pembayaran
-                  </Link>
-                  <Link href="/admin/customers" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
-                    Customers
-                  </Link>
-                  <Link href="/admin/pembukuan" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
-                    Pembukuan
-                  </Link>
-                  <Link href="/admin/statistik" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
-                    Statistik
-                  </Link>
                   <Link href="/admin/settings" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
                     Settings
+                  </Link>
+                  <Link href="/profile" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                    Profile
+                  </Link>
+                  <Link href="/admin/users" className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                    User Management
                   </Link>
                 </>
               ) : (
@@ -197,53 +185,25 @@ export default function Header() {
                 // Admin Mobile Navigation
                 <>
                   <Link
-                    href="/admin/pickups/new"
-                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Quick Pickup
-                  </Link>
-                  <Link
-                    href="/pickups"
-                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    All Pickups
-                  </Link>
-                  <Link
-                    href="/bills"
-                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Pembayaran
-                  </Link>
-                  <Link
-                    href="/admin/customers"
-                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Customers
-                  </Link>
-                  <Link
-                    href="/admin/pembukuan"
-                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Pembukuan
-                  </Link>
-                  <Link
-                    href="/admin/statistik"
-                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Statistik
-                  </Link>
-                  <Link
                     href="/admin/settings"
                     className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Settings
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/admin/users"
+                    className="text-gray-700 hover:text-green-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    User Management
                   </Link>
                 </>
               ) : (

@@ -170,59 +170,101 @@ export default function AdminPage() {
         <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
           <h2 className="text-lg md:text-xl font-bold mb-4 text-gray-900">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {user?.role === 'ADMIN' && (
+              <>
+                <Link href="/admin/pickups/new" className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">🚀</div>
+                  <div className="text-sm md:text-base font-medium">Quick Pickup</div>
+                </Link>
+
+                <Link href="/pickups" className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">📋</div>
+                  <div className="text-sm md:text-base font-medium">All Pickups</div>
+                </Link>
+
+                <Link href="/bills" className="group bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">💳</div>
+                  <div className="text-sm md:text-base font-medium">Pembayaran</div>
+                </Link>
+
+                <Link href="/admin/pembukuan" className="group bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">📊</div>
+                  <div className="text-sm md:text-base font-medium">Pembukuan</div>
+                </Link>
+
+                <Link href="/admin/customers" className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">👥</div>
+                  <div className="text-sm md:text-base font-medium">Customers</div>
+                </Link>
+
+                <Link href="/admin/statistik" className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">📈</div>
+                  <div className="text-sm md:text-base font-medium">Statistik</div>
+                </Link>
+              </>
+            )}
+
             {user?.role === 'CUSTOMER' && (
-              <Link href="/pickups/new" className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-                <div className="text-3xl md:text-4xl mb-2">➕</div>
-                <div className="text-sm md:text-base font-medium">New Pickup</div>
-              </Link>
+              <>
+                <Link href="/pickups/new" className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">➕</div>
+                  <div className="text-sm md:text-base font-medium">New Pickup</div>
+                </Link>
+
+                <Link href="/pickups" className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">📋</div>
+                  <div className="text-sm md:text-base font-medium">All Pickups</div>
+                </Link>
+
+                <Link href="/bills" className="group bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">💳</div>
+                  <div className="text-sm md:text-base font-medium">Bills</div>
+                </Link>
+
+                <Link href="/profile" className="group bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">👤</div>
+                  <div className="text-sm md:text-base font-medium">Profile</div>
+                </Link>
+              </>
             )}
 
-            {user?.role === 'ADMIN' && (
-              <Link href="/admin/pickups/new" className="group bg-gradient-to-r from-green-500 to-green-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-                <div className="text-3xl md:text-4xl mb-2">🚀</div>
-                <div className="text-sm md:text-base font-medium">Quick Pickup</div>
-              </Link>
-            )}
-            
-            {user?.role === 'ADMIN' && (
-              <Link href="/admin/users" className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-                <div className="text-3xl md:text-4xl mb-2">👥</div>
-                <div className="text-sm md:text-base font-medium">User Management</div>
-              </Link>
-            )}
-
-            {user?.role === 'ADMIN' && (
-              <Link href="/admin/settings" className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-                <div className="text-3xl md:text-4xl mb-2">⚙️</div>
-                <div className="text-sm md:text-base font-medium">Settings</div>
-              </Link>
-            )}
-            
-            <Link href="/pickups" className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-              <div className="text-3xl md:text-4xl mb-2">📋</div>
-              <div className="text-sm md:text-base font-medium">All Pickups</div>
-            </Link>
-            
-            {(user?.role === 'CUSTOMER' || user?.role === 'ADMIN' || user?.role === 'WAREHOUSE') && (
-              <Link href="/bills" className="group bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-                <div className="text-3xl md:text-4xl mb-2">💳</div>
-                <div className="text-sm md:text-base font-medium">
-                  {user?.role === 'WAREHOUSE' || user?.role === 'ADMIN' ? 'Pembayaran' : 'Bills'}
-                </div>
-              </Link>
-            )}
-            
             {user?.role === 'COURIER' && (
-              <Link href="/commissions" className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-                <div className="text-3xl md:text-4xl mb-2">💵</div>
-                <div className="text-sm md:text-base font-medium">Commissions</div>
-              </Link>
+              <>
+                <Link href="/pickups" className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">📋</div>
+                  <div className="text-sm md:text-base font-medium">All Pickups</div>
+                </Link>
+
+                <Link href="/commissions" className="group bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">💵</div>
+                  <div className="text-sm md:text-base font-medium">Commissions</div>
+                </Link>
+
+                <Link href="/profile" className="group bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">👤</div>
+                  <div className="text-sm md:text-base font-medium">Profile</div>
+                </Link>
+              </>
             )}
 
-            <Link href="/profile" className="group bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
-              <div className="text-3xl md:text-4xl mb-2">👤</div>
-              <div className="text-sm md:text-base font-medium">Profile</div>
-            </Link>
+            {user?.role === 'WAREHOUSE' && (
+              <>
+                <Link href="/pickups" className="group bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">📋</div>
+                  <div className="text-sm md:text-base font-medium">All Pickups</div>
+                </Link>
+
+                <Link href="/bills" className="group bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">💳</div>
+                  <div className="text-sm md:text-base font-medium">Pembayaran</div>
+                </Link>
+
+                <Link href="/profile" className="group bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 md:p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 text-center">
+                  <div className="text-3xl md:text-4xl mb-2">👤</div>
+                  <div className="text-sm md:text-base font-medium">Profile</div>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </main>
