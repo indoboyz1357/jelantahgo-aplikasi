@@ -44,6 +44,27 @@ export default function AdminNewPickupPage() {
     notes: ''
   })
 
+  // Get day name in Indonesian
+  const getDayName = (dateString: string) => {
+    if (!dateString) return ''
+    const date = new Date(dateString + 'T00:00:00')
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+    return days[date.getDay()]
+  }
+
+  // Generate time options in 24-hour format
+  const generateTimeOptions = () => {
+    const options = []
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const hourStr = hour.toString().padStart(2, '0')
+        const minuteStr = minute.toString().padStart(2, '0')
+        options.push(`${hourStr}:${minuteStr}`)
+      }
+    }
+    return options
+  }
+
   useEffect(() => {
     if (authLoading) return
 
@@ -262,8 +283,61 @@ export default function AdminNewPickupPage() {
                   {/* Share Location - Required */}
                   <div className="border-2 border-green-200 rounded-lg p-3 bg-green-50">
                     <label className="block text-xs font-medium text-gray-700 mb-2">Share Lokasi <span className="text-red-500">*</span></label>
-                    <p className="text-xs text-gray-600 mb-3">Diperlukan agar kurir dapat menemukan lokasi Anda dengan mudah</p>
+                    <p className="text-xs text-gray-600 mb-3">Diperlukan agar kurir dapat menemukan lokasi customer dengan mudah</p>
 
+                    {/* Option 1: Paste Share Location URL */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Opsi 1: Paste Link Share Lokasi dari Customer
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="https://maps.app.goo.gl/muiPcCZUbWhEJFH49"
+                        value={registerForm.shareLocationUrl}
+                        onChange={(e) => {
+                          const url = e.target.value
+                          setRegisterForm({ ...registerForm, shareLocationUrl: url })
+
+                          // Try to extract coordinates from Google Maps URL
+                          try {
+                            // Pattern for various Google Maps URL formats
+                            let lat: string | null = null
+                            let lng: string | null = null
+
+                            // Format: @-6.2088,106.8456 or q=-6.2088,106.8456
+                            const coordPattern = /[@q=](-?\d+\.?\d*),(-?\d+\.?\d*)/
+                            const match = url.match(coordPattern)
+
+                            if (match) {
+                              lat = match[1]
+                              lng = match[2]
+                            }
+
+                            if (lat && lng) {
+                              setRegisterForm(prev => ({
+                                ...prev,
+                                latitude: lat!,
+                                longitude: lng!,
+                                shareLocationUrl: url
+                              }))
+                              toast.success('Koordinat berhasil diambil dari URL!')
+                            }
+                          } catch (err) {
+                            // If parsing fails, just keep the URL
+                          }
+                        }}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+                      <div className="mt-1 text-xs text-gray-500">
+                        Customer bisa kirim link Google Maps via WhatsApp/SMS
+                      </div>
+                    </div>
+
+                    <div className="text-center text-xs text-gray-500 mb-3">
+                      - ATAU -
+                    </div>
+
+                    {/* Option 2: Manual Input or Auto-detect */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Latitude</label>
@@ -315,18 +389,19 @@ export default function AdminNewPickupPage() {
                       }}
                       className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 text-sm"
                     >
-                      Ambil Lokasi Saya
+                      📍 Ambil Lokasi Saya (Auto-detect)
                     </button>
 
                     {registerForm.latitude && registerForm.longitude && (
-                      <div className="mt-2 p-2 bg-white rounded border text-xs">
-                        <div>Koordinat: {registerForm.latitude}, {registerForm.longitude}</div>
+                      <div className="mt-3 p-2 bg-white rounded border text-xs">
+                        <div className="font-medium mb-1">✓ Koordinat tersimpan:</div>
+                        <div className="text-gray-600">Lat: {registerForm.latitude}, Lng: {registerForm.longitude}</div>
                         {registerForm.shareLocationUrl && (
                           <a
                             href={registerForm.shareLocationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
+                            className="text-blue-600 hover:text-blue-800 underline mt-1 inline-block"
                           >
                             Lihat di Google Maps →
                           </a>
@@ -430,7 +505,9 @@ export default function AdminNewPickupPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tanggal Pickup
+              </label>
               <input
                 type="date"
                 min={new Date().toISOString().split('T')[0]}
@@ -439,15 +516,35 @@ export default function AdminNewPickupPage() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
+              {formData.date && (
+                <div className="mt-2 text-sm font-medium text-green-600">
+                  {getDayName(formData.date)} - {new Date(formData.date + 'T00:00:00').toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </div>
+              )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-              <input
-                type="time"
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Jam Pickup (24 Jam)
+              </label>
+              <select
                 value={formData.time}
                 onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
+              >
+                <option value="">Pilih Jam</option>
+                {generateTimeOptions().map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-1 text-xs text-gray-500">
+                Format 24 jam (contoh: 14:00 = jam 2 siang)
+              </div>
             </div>
           </div>
 
